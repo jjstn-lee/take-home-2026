@@ -30,16 +30,23 @@ class Price(BaseModel):
     # If a product is on sale, this is the original price
     compare_at_price: float | None = None
 
-# This is the final product schema that you need to output. 
-# You may add additional models as needed.
+# I do my best to not modify the Product schema (and Price and Category schemas). Any changes are commented on below.
 class Product(BaseModel):
     name: str
     price: Price
     description: str
     key_features: list[str]
-    image_urls: list[str]
+    image_urls: list[str]                           # Grabbing image URLs and ensuring they're paired with is difficult and expensive, especially without computer vision.
+                                                    # Thus, I simply decided to grab all product images but not the variant they're supposed to be.
     video_url: str | None = None
     category: Category
     brand: str
-    colors: list[str]
-    variants: list[Any] # TODO (@dev): Define variant model
+    # variants: list[Variant]               # TODO (@dev): Define variant model
+    
+    # Discerning variants may not be fully possible from raw HTML alone on SSR websites. So,
+    # I use the Cartesian product as an upper bound on possible variants. It is important
+    # to note that valid variants would actually be a subset of this.
+    
+    # Implementing a variant model is unnecessary. Instead, we can keep track of the options and calculate the
+    # Cartesian product later. This also helps us to call the LLM less frequently.
+    options: dict[str, list[str]] = {}      # e.g., {"color": ["Red", "Blue", "Green"], "size": ["S", "M", "L"]}
